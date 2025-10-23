@@ -1,0 +1,15 @@
+service:
+
+  tidb:
+    container_name: tidb
+    build:
+      context: ./tidb
+      dockerfile: ./Dockerfile
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    environment:
+      - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
