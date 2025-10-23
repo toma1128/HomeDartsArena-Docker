@@ -1,17 +1,88 @@
 version: '3.8'
 
-service:
+services:
 
-  tidb:
-    container_name: tidb
+  #フロントエンド - React
+  frontend:
+    container_name: React
     build:
-      context: ./tidb
-      dockerfile: ./Dockerfile
+      context: ../frontend
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    env_file:
+      - ../frontend/.env
+    command: npm start
+
+  #バックエンド - Hono
+  backend:
+    container_name: Hono
+    build:
+      context: ../backend
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - ${BACKEND_PORT}:${BACKEND_PORT}
+    volumes:
+      - ../backend:/app
+      - /app/node_modules
+    env_file:
+      - ../backend/.env
+    command: bun run dev
+    depends_on:
+      - tidb-server
+
+  #Placement Driver - PD 指揮役
+  pd-server:
+    container_name: PD
+    image: pingcap/pd:latest
+    ports:
+      - ${PD_PORT}:${PD_PORT} #クライアント用
+      - ${PD_PEER_PORT}:${PD_PEER_PORT} #ピア用
+    volumes:
+      - pd-data:/data
+    command:
+      - "--name=pd-server"
+      - "--client-urls=http://0.0.0.0:${PD_PORT}"
+      - "--peer-urls=http://0.0.0.0:${PD_PEER_PORT}"
+      - "--advertise-client-urls=http://pd-server:${PD_PORT}"
+      - "--advertise-peer-urls=http://pd-server:${PD_PEER_PORT}"
+      - "--initial-cluster=pd-server=http://pd-server:${PD_PEER_PORT}"
+
+  #Key-Valueデータベース - TiKV 実際のデータを保存する場所
+  tikv-server:
+    container_name: TiKV
+    image: pingcap/tikv:latest
+    ports:
+      - ${TIKV_PORT}:${TIKV_PORT}
+    volumes:
+      - tikv-data:/data
+    command:
+      - "--addr=0.0.0.0:${TIKV_PORT}"
+      - "--advertise-addr=tikv-server:${TIKV_PORT}"
+      - "--pd=pd-server:${PD_PORT}"
+    depends_on:
+      - pd-server
+
+  #TiDB - TiDB SQL窓口
+  tidb-server:
+    container_name: tidb
+    image: pingcap/tidb:latest
     ports:
       - ${DB_PORT}:${DB_PORT}
-    environment:
-      - TZ=${TZ}
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
-      - MYSQL_DATABASE=${DB_NAME}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+      - ${DB_DASHBOARD_PORT}:${DB_DASHBOARD_PORT}
+    volumes:
+      - tidb-logs:/tmp/tidb
+    command:
+      - "--store=tikv"
+      - "--path=pd-server:${PD_PORT}"
+    depends_on:
+      - tikv-server
+      - pd-server
+
+volumes:
+  pd-data:
+  tikv-data:
+  tidb-data:
