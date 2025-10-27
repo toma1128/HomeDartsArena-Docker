@@ -69,7 +69,7 @@ services:
   #TiDB - TiDB SQL窓口
   tidb-server:
     container_name: tidb
-    image: pingcap/tidb:latest
+    image: pingcap/tidb:v7.5.7
     ports:
       - ${DB_PORT}:${DB_PORT}
       - ${DB_DASHBOARD_PORT}:${DB_DASHBOARD_PORT}
