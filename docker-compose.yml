@@ -32,6 +32,23 @@ services:
     depends_on:
       - tidb-server
 
+  #認証サーバー - Hono
+  auth:
+    container_name: Auth
+    build:
+      context: ../auth
+      dockerfile: ./auth/Dockerfile
+    ports:
+      - ${AUTH_PORT}:${AUTH_PORT}
+    volumes:
+      - ../auth:/app
+      - /app/node_modules
+    env_file:
+      - ../auth/.env
+    command: bun run dev
+    depends_on:
+      - tidb-server
+
   #Placement Driver - PD 指揮役
   pd-server:
     container_name: PD
