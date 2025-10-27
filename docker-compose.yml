@@ -5,7 +5,7 @@ services:
     container_name: React
     build:
       context: ../frontend
-      dockerfile: ./frontend/Dockerfile
+      dockerfile: ../docker/frontend/Dockerfile
     ports:
       - ${FRONTEND_PORT}:${FRONTEND_PORT}
     volumes:
@@ -20,7 +20,7 @@ services:
     container_name: Hono
     build:
       context: ../backend
-      dockerfile: ./backend/Dockerfile
+      dockerfile: ../docker/backend/Dockerfile
     ports:
       - ${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
@@ -37,7 +37,7 @@ services:
     container_name: Auth
     build:
       context: ../auth
-      dockerfile: ./auth/Dockerfile
+      dockerfile: ../docker/auth/Dockerfile
     ports:
       - ${AUTH_PORT}:${AUTH_PORT}
     volumes:
