@@ -7,13 +7,13 @@ services:
       context: ../frontend
       dockerfile: ../docker/frontend/Dockerfile
     ports:
-      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+      - ${FRONTEND_PORT}:5173
     volumes:
       - ../frontend:/app
       - /app/node_modules
     env_file:
       - ../frontend/.env
-    command: npm start
+    command: npm run dev -- --host 0.0.0.0
 
   #バックエンド - Hono
   backend:
@@ -58,6 +58,8 @@ services:
       - ${PD_PEER_PORT}:${PD_PEER_PORT} #ピア用
     volumes:
       - pd-data:/data
+    env_file:
+      - ./.env
     command:
       - "--name=pd-server"
       - "--client-urls=http://0.0.0.0:${PD_PORT}"
@@ -74,6 +76,8 @@ services:
       - ${TIKV_PORT}:${TIKV_PORT}
     volumes:
       - tikv-data:/data
+    env_file:
+      - ./.env
     command:
       - "--addr=0.0.0.0:${TIKV_PORT}"
       - "--advertise-addr=tikv-server:${TIKV_PORT}"
@@ -90,6 +94,8 @@ services:
       - ${DB_DASHBOARD_PORT}:${DB_DASHBOARD_PORT}
     volumes:
       - tidb-data:/tmp/tidb
+    env_file:
+      - ./.env
     command:
       - "--store=tikv"
       - "--path=pd-server:${PD_PORT}"
