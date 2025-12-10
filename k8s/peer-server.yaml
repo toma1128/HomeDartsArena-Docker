@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peer-server
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: peer-server
+  template:
+    metadata:
+      labels:
+        app: peer-server
+    spec:
+      containers:
+        - name: peer-server
+          image: peerjs/peerjs-server:latest
+          args:
+            - "--port=9001"
+            - "--path=/"
+          ports:
+            - containerPort: 9001
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: peer-server
+  namespace: default
+spec:
+  selector:
+    app: peer-server
+  ports:
+    - protocol: TCP
+      port: 9001
+      targetPort: 9001
+  type: ClusterIP
