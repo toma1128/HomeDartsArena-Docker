@@ -37,8 +37,6 @@ spec:
             limits:
               cpu: "100m"
               memory: "64Mi"
-
-      # メインコンテナ: MariaDB
       containers:
         - name: mariadb
           image: mariadb:10.11
@@ -67,7 +65,7 @@ spec:
       volumes:
         - name: db-data
           hostPath:
-            path: /var/lib/k3s-db-data-v2
+            path: /var/lib/k3s-db-data-v3
             type: DirectoryOrCreate
         - name: db-config
           configMap:
