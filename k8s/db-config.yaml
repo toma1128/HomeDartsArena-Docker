@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-script
+  namespace: default
+data:
+  init-db.sql: |
+    SET PASSWORD FOR 'root'@'%' = '${ROOT_PASS}';
+
+    CREATE DATABASE IF NOT EXISTS `${AUTH_DB_NAME}`;
+    CREATE USER IF NOT EXISTS '${AUTH_DB_USER}'@'%' IDENTIFIED BY '${AUTH_DB_PASS}';
+    GRANT ALL PRIVILEGES ON `${AUTH_DB_NAME}`.* TO '${AUTH_DB_USER}'@'%';
+
+    CREATE DATABASE IF NOT EXISTS `${BACKEND_DB_NAME}`;
+    CREATE USER IF NOT EXISTS '${BACKEND_DB_USER}'@'%' IDENTIFIED BY '${BACKEND_DB_PASS}';
+    GRANT ALL PRIVILEGES ON `${BACKEND_DB_NAME}`.* TO '${BACKEND_DB_USER}'@'%';
+
+    FLUSH PRIVILEGES;
