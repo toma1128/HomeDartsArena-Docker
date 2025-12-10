@@ -49,6 +49,17 @@ services:
     depends_on:
       - tidb-server
 
+  # P2Pサーバー - PeerJS
+  peer-server:
+    container_name: PeerServer
+    image: peerjs/peerjs-server:latest
+    platform: linux/amd64
+    ports:
+      - "${PEER_PORT}:${PEER_PORT}"
+    env_file:
+      - ./.env
+    command: ["--port", "${PEER_PORT}", "--path", "/"]
+
   #Placement Driver - PD 指揮役
   pd-server:
     container_name: PD
