@@ -67,7 +67,7 @@ spec:
       volumes:
         - name: db-data
           hostPath:
-            path: /var/lib/k3s-db-data
+            path: /var/lib/k3s-db-data-v2
             type: DirectoryOrCreate
         - name: db-config
           configMap:
