@@ -4,6 +4,7 @@ metadata:
   name: db-init-job
   namespace: default
 spec:
+  backoffLimit: 10
   template:
     spec:
       restartPolicy: OnFailure
@@ -14,30 +15,35 @@ spec:
           args:
             - |
               echo "Waiting for TiDB to be ready..."
-              until mysql -h basic-tidb -P 4000 -u root -p"${ROOT_PASS}" -e "SELECT 1"; do
+              until mysql -h basic-tidb -P 4000 -u root -e "SELECT 1" >/dev/null 2>&1 || \
+                    mysql -h basic-tidb -P 4000 -u root -p"${ROOT_PASS}" -e "SELECT 1" >/dev/null 2>&1; do
                 echo "Waiting for basic-tidb..."
                 sleep 5
               done
-
+              
               echo "Preparing init script..."
-              # apk add gettext
               apt-get update && apt-get install -y gettext-base
-
               envsubst < /config/init-db.sql > /tmp/init-executable.sql
 
-              echo "Running init script..."
-              mysql -h basic-tidb -P 4000 -u root -p"${ROOT_PASS}" < /tmp/init-executable.sql
+              echo "Checking authentication status..."
+              if mysql -h basic-tidb -P 4000 -u root -e "SELECT 1" >/dev/null 2>&1; then
+                echo "Fresh install detected (No password). Initializing..."）
+                mysql -h basic-tidb -P 4000 -u root < /tmp/init-executable.sql
+              else
+                echo "Password already set. Initializing with password..."
+                mysql -h basic-tidb -P 4000 -u root -p"${ROOT_PASS}" < /tmp/init-executable.sql
+              fi
 
               echo "Initialization completed."
-
+          
           envFrom:
             - secretRef:
                 name: db-init-secrets
-
+          
           volumeMounts:
             - name: db-config
               mountPath: /config
-
+      
       volumes:
         - name: db-config
           configMap:
