@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init-job
+  namespace: default
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: db-initializer
+          image: mariadb:10.11
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "Waiting for TiDB to be ready..."
+              until mysql -h basic-tidb -P 4000 -u root -p"${ROOT_PASS}" -e "SELECT 1"; do
+                echo "Waiting for basic-tidb..."
+                sleep 5
+              done
+
+              echo "Preparing init script..."
+              # apk add gettext
+              apt-get update && apt-get install -y gettext-base
+
+              envsubst < /config/init-db.sql > /tmp/init-executable.sql
+
+              echo "Running init script..."
+              mysql -h basic-tidb -P 4000 -u root -p"${ROOT_PASS}" < /tmp/init-executable.sql
+
+              echo "Initialization completed."
+
+          envFrom:
+            - secretRef:
+                name: db-init-secrets
+
+          volumeMounts:
+            - name: db-config
+              mountPath: /config
+
+      volumes:
+        - name: db-config
+          configMap:
+            name: db-init-script
