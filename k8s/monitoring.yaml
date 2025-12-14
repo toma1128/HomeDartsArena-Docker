@@ -21,6 +21,19 @@ spec:
               url: http://loki-stack.monitoring.svc.cluster.local:3100
               access: proxy
               isDefault: false
+        kubelet:
+          serviceMonitor:
+            https: true
+            insecureSkipVerify: true
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        kubeProxy:
+          enabled: false
+
   destination:
     server: "https://kubernetes.default.svc"
     namespace: monitoring
