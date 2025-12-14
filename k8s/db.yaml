@@ -1,88 +1,33 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
 metadata:
-  name: tidb-server
+  name: basic
   namespace: default
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: tidb-server
-  template:
-    metadata:
-      labels:
-        app: tidb-server
-    spec:
-      initContainers:
-        - name: render-init-sql
-          image: alpine:latest
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              apk add --no-cache gettext
-              envsubst < /config/init-db.sql > /docker-entrypoint-initdb.d/init.sql
-              echo "Init script generated successfully."
-          envFrom:
-            - secretRef:
-                name: db-init-secrets
-          volumeMounts:
-            - name: db-config
-              mountPath: /config
-            - name: init-volume
-              mountPath: /docker-entrypoint-initdb.d
-          resources:
-            requests:
-              cpu: "10m"
-              memory: "32Mi"
-            limits:
-              cpu: "100m"
-              memory: "64Mi"
-      containers:
-        - name: mariadb
-          image: mariadb:10.11
-          args:
-            - "--port=3306"
-          env:
-            - name: MARIADB_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: db-init-secrets
-                  key: ROOT_PASS
-          ports:
-            - containerPort: 3306
-          volumeMounts:
-            - name: db-data
-              mountPath: /var/lib/mysql
-            - name: init-volume
-              mountPath: /docker-entrypoint-initdb.d
-          resources:
-            requests:
-              cpu: "100m"
-              memory: "256Mi"
-            limits:
-              cpu: "1000m"
-              memory: "512Mi"
-      volumes:
-        - name: db-data
-          hostPath:
-            path: /var/lib/k3s-db-data-v3
-            type: DirectoryOrCreate
-        - name: db-config
-          configMap:
-            name: db-init-script
-        - name: init-volume
-          emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: tidb-server
-  namespace: default
-spec:
-  selector:
-    app: tidb-server
-  ports:
-    - protocol: TCP
-      port: 3366
-      targetPort: 3306
-  type: ClusterIP
+  version: "v7.5.7"
+  timezone: Asia/Tokyo
+  hostNetwork: false
+  
+  # PD (司令塔)
+  pd:
+    baseImage: pingcap/pd
+    replicas: 1
+    requests:
+      storage: "1Gi"
+    config: {}
+
+  # TiKV (データ保存)
+  tikv:
+    baseImage: pingcap/tikv
+    replicas: 1
+    requests:
+      storage: "10Gi"
+    config: {}
+
+  # TiDB (SQL計算)
+  tidb:
+    baseImage: pingcap/tidb
+    replicas: 1
+    service:
+      type: ClusterIP
+    config: {}
