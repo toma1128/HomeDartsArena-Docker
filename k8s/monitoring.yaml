@@ -12,6 +12,10 @@ spec:
     helm:
       values: |
         grafana:
+          grafana.ini:
+            server:
+              root_url: https://homedartsarena-grafana.kirimaru.org/
+              domain: homedartsarena-grafana.kirimaru.org
           service:
             type: NodePort
             nodePort: 32000
