@@ -11,6 +11,18 @@ spec:
     targetRevision: 56.6.2
     helm:
       values: |
+        prometheus:
+            prometheusSpec:
+              retention: 10d
+              
+              # 永続化設定
+              storageSpec:
+                volumeClaimTemplate:
+                  spec:
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 10Gi
         grafana:
           service:
             type: NodePort
