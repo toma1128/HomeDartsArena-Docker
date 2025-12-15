@@ -20,7 +20,7 @@ spec:
               type: loki
               url: http://loki-stack.monitoring.svc.cluster.local:3100
               access: proxy
-              isDefault: false
+              isDefault: true
         kubelet:
           enabled: true
           serviceMonitor:
